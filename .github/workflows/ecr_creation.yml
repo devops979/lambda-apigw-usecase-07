@@ -1,0 +1,84 @@
+name: ECR Repository Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+  push:
+    branches:
+      - main
+    paths:
+      - 'Infra/modules/ecr/**'
+
+env:
+  AWS_REGION: ap-south-1
+
+defaults:
+  run:
+    working-directory: ./Infra/modules/ecr  
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  create-ecr-repository:
+    name: Create ECR Repository
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main'))
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
+
+      - name: Terraform Init - ECR Module
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Select or Create Terraform Workspace
+        run: |
+          if ! terraform workspace list | grep -w "${{ github.event.inputs.environment || 'dev' }}"; then
+            terraform workspace new "${{ github.event.inputs.environment || 'dev' }}"
+          fi
+          terraform workspace select "${{ github.event.inputs.environment || 'dev' }}"
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="environment=${{ github.event.inputs.environment || 'dev' }}" \
+            -var-file="${{ github.event.inputs.environment || 'dev' }}.tfvars" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply tfplan -target=module.ecr -auto-approve
+
+      - name: Get ECR Repository URI
+        id: ecr-uri
+        run: |
+          ECR_URI=$(terraform output -raw repository_uri)
+          echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
+          echo "ECR Repository URI: $ECR_URI"
+
+    outputs: 
+      ecr_uri: ${{ steps.ecr-uri.outputs.ecr_uri }}
