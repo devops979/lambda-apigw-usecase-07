@@ -10,8 +10,6 @@ private_subnet_cidrs = ["10.2.101.0/24", "10.2.102.0/24"]
 
 availability_zones = ["ap-south-1a", "ap-south-1b", "ap-south-1c"]
 
-lambda_runtime    = "python3.13"
-lambda_handler    = "app.lambda_handler"
 lambda_memory_size = 512
 lambda_timeout     = 10
 lambda_architectures = ["x86_64"]
