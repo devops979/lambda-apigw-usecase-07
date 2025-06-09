@@ -40,6 +40,11 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::211125325699:role/Demo_Access
           aws-region: us-east-1
+          
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
 
       - name: Terraform Format
         id: fmt
