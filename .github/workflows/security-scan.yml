@@ -113,7 +113,7 @@ jobs:
           mv terraform-docs /usr/local/bin/
 
       - name: Generate Terraform Docs and Commit
-        working-directory: terraform/environments/${{ github.event.inputs.environment || 'dev' }}
+        working-directory: ./Infra/${{ github.event.inputs.environment || 'prod' }}
         if: github.event.pull_request.head.repo.full_name == github.repository
         run: |
           git config --local user.email "devops979@gmail.com"
