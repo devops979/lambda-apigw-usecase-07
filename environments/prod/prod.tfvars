@@ -1,6 +1,6 @@
 environment       = "prod"
-name_prefix       = "demo-lambda-prod"
-service_name      = "demo-lambda-appgw-prod"
+name_prefix       = "demo-lambda"
+service_name      = "demo-lambda-appgw"
 
 aws_region        = "ap-south-1"
 cidr_block        = "10.2.0.0/16"
