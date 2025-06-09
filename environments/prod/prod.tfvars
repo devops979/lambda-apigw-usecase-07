@@ -13,7 +13,7 @@ availability_zones = ["ap-south-1a", "ap-south-1b", "ap-south-1c"]
 lambda_memory_size = 512
 lambda_timeout     = 10
 lambda_architectures = ["x86_64"]
-image_tag          = "prod-latest"
+image_tag          = "latest"
 
 api_stage_name     = "prod"
 api_logging_level  = "ERROR"
