@@ -43,37 +43,8 @@ variable "service_name" {
 }
 
 
-# ECR Variables
-variable "ecr_image_tag_mutability" {
-  description = "Whether ECR image tags are mutable or immutable"
-  type        = string
-  default     = "MUTABLE"
-}
 
-variable "ecr_scan_on_push" {
-  description = "Whether to scan images on push to ECR"
-  type        = bool
-  default     = true
-}
 
-variable "ecr_lifecycle_policy" {
-  description = "JSON lifecycle policy for ECR repository"
-  type        = string
-  default     = null
-}
-
-# Lambda Variables
-variable "lambda_runtime" {
-  description = "Lambda function runtime"
-  type        = string
-  default     = "python3.13"
-}
-
-variable "lambda_handler" {
-  description = "Lambda function handler"
-  type        = string
-  default     = "app.lambda_handler"
-}
 
 variable "lambda_memory_size" {
   description = "Memory allocated to Lambda function in MB"
@@ -154,11 +125,11 @@ variable "lambda_architectures" {
 # }
 
 
-variable "api_gateway_execution_arn" {
-  description = "API Gateway execution ARN for Lambda permission"
-  type        = string
-  default     = ""
-}
+# variable "api_gateway_execution_arn" {
+#   description = "API Gateway execution ARN for Lambda permission"
+#   type        = string
+#   default     = ""
+# }
 
 variable "lambda_environment_variables" {
   description = "Environment variables for the Lambda function"
