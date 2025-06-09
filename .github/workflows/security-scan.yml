@@ -115,6 +115,8 @@ jobs:
       - name: Generate Terraform Docs and Commit
         working-directory: ./Infra
         if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
         run: |
           git config --local user.email "devops979@gmail.com"
           git config --local user.name "devops979"
@@ -122,6 +124,9 @@ jobs:
           git fetch origin ${{ github.head_ref }}
           git checkout ${{ github.head_ref }}
            
+          # Set remote URL with PAT for authenticated push
+          git remote set-url origin https://${{ github.actor }}:${GH_PAT}@github.com/${{ github.repository }}
+
           terraform-docs markdown . > README.md.new
           mv README.md.new README.md
 
