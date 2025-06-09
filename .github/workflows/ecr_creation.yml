@@ -17,6 +17,8 @@ on:
       - main
 #    paths:
 #      - 'Infra/modules/ecr/**'
+    paths-ignore:
+       - '.github/workflows'
 
 env:
   AWS_REGION: ap-south-1
