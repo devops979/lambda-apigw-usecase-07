@@ -17,10 +17,11 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       security-events: write
       actions: read
       id-token: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -113,20 +114,29 @@ jobs:
           mv terraform-docs /usr/local/bin/
 
       - name: Generate Terraform Docs and Commit
+        working-directory: ./Infra
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
         run: |
           git config --local user.email "devops979@gmail.com"
           git config --local user.name "devops979"
 
+          git fetch origin ${{ github.head_ref }}
+          git checkout ${{ github.head_ref }}
+           
+          # Set remote URL with PAT for authenticated push
+          git remote set-url origin https://${{ github.actor }}:${GITHUBTOKEN}@github.com/${{ github.repository }}
+
           terraform-docs markdown . > README.md.new
           mv README.md.new README.md
 
-          if ! git diff --quiet README.md; then
+          if [ -f README.md ]; then
             git add README.md
-            git commit -m "docs: Update README.md with Terraform plan and docs"
-            git push
-            echo "Successfully committed README.md changes."
+            git diff --cached --quiet && echo "No changes to commit" || git commit -m "docs(terraform): Update README.md via terraform-docs"
+            git push origin HEAD:${{ github.head_ref }}
           else
-            echo "No README.md changes to commit."
+            echo "README.md was not generated."
           fi
 
       - name: Update Pull Request with Terraform Plan

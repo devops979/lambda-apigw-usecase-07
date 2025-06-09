@@ -54,7 +54,11 @@ jobs:
       contents: read
 
     steps:
+
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -72,11 +76,14 @@ jobs:
 
       - name: Select or Create Terraform Workspace
         run: |
-          ENV=${{ github.event.inputs.environment || 'prod' }}
+          ENV="${{ github.event.inputs.environment }}"
+          ENV="${ENV:-prod}"  # fallback to 'prod' if empty
+      
           if ! terraform workspace list | grep -w "$ENV"; then
             terraform workspace new "$ENV"
           fi
           terraform workspace select "$ENV"
+
 
       - name: Terraform Output ECR URL
         id: ecr
@@ -94,9 +101,6 @@ jobs:
             docker build -t ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }} .
             docker push ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }}
           fi
-
-
-
 
       - name: Update Lambda Image if Function Exists
         shell: bash
