@@ -120,13 +120,12 @@ jobs:
           terraform-docs markdown . > README.md.new
           mv README.md.new README.md
 
-          if ! git diff --quiet README.md; then
+          if [ -f README.md ]; then
             git add README.md
-            git commit -m "docs: Update README.md with Terraform plan and docs"
-            git push
-            echo "Successfully committed README.md changes."
+            git diff --cached --quiet && echo "No changes to commit" || git commit -m "docs(terraform): Update README.md via terraform-docs"
+            git push origin HEAD:${{ github.head_ref }}
           else
-            echo "No README.md changes to commit."
+            echo "README.md was not generated."
           fi
 
       - name: Update Pull Request with Terraform Plan
