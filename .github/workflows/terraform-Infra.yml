@@ -6,7 +6,7 @@ on:
       environment:
         description: 'Environment to deploy to'
         required: true
-        default: 'dev'
+        default: 'prod'
         type: choice
         options:
           - dev
@@ -71,7 +71,7 @@ jobs:
 
       - name: Select or Create Terraform Workspace
         run: |
-          ENV=${{ github.event.inputs.environment || 'dev' }}
+          ENV=${{ github.event.inputs.environment || 'prod' }}
           if ! terraform workspace list | grep -w "$ENV"; then
             terraform workspace new "$ENV"
           fi
