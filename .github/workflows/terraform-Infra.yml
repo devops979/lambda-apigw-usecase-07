@@ -154,7 +154,7 @@ jobs:
         id: plan
         run: |
           terraform plan \
-            -var-file="environments/${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars" \
+            -var-file="../environments/${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars" \
             -var="aws_region=${{ env.AWS_REGION }}" \
             -var="image_tag=${{ needs.build_push_update_lambda.outputs.image_tag }}" \
             -out=tfplan
