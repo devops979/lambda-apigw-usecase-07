@@ -47,7 +47,7 @@ module "ecr" {
 
 module "lambda" {
   source                = "./modules/lambda"
-  function_name         = "${var.service_name}-handler"
+  function_name         = "${var.service_name}-${terraform.workspace}-handler"
   role_arn              = module.lambda_iam.lambda_exec_role_arn
   image_uri             = "${module.ecr.repository_url}:${var.image_tag}" # Required for container-based Lambda
   memory_size           = var.lambda_memory_size
