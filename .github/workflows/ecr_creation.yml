@@ -67,7 +67,7 @@ jobs:
         run: |
           terraform plan \
             -var="environment=${{ github.event.inputs.environment || 'dev' }}" \
-            -var-file="./environments/${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars" \
+            -var-file=".github/environments/${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars" \
             -out=tfplan
 
       - name: Terraform Apply
