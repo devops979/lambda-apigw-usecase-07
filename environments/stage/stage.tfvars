@@ -1,6 +1,6 @@
 environment       = "staging"
-name_prefix       = "demo-lambda-staging"
-service_name      = "demo-lambda-appgw-staging"
+name_prefix       = "demo-lambda"
+service_name      = "demo-lambda-appgw"
 
 aws_region        = "ap-south-1"
 cidr_block        = "10.1.0.0/16"
@@ -10,8 +10,7 @@ private_subnet_cidrs = ["10.1.101.0/24", "10.1.102.0/24"]
 
 availability_zones = ["ap-south-1a", "ap-south-1b", "ap-south-1c"]
 
-lambda_runtime    = "python3.13"
-lambda_handler    = "app.lambda_handler"
+
 lambda_memory_size = 256
 lambda_timeout     = 5
 lambda_architectures = ["x86_64"]
