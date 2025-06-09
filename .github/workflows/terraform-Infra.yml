@@ -165,12 +165,12 @@ jobs:
           terraform workspace select "$ENV"
 
       - name: Terraform Plan
-        id: plan
+        working-directory: ./Infra
         run: |
+          env="${{ github.event.inputs.environment || 'prod' }}"
           terraform plan \
-            -var-file="../environments/${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars" \
-            -var="aws_region=${{ env.AWS_REGION }}" \
-            -var="image_tag=${{ needs.build_push_update_lambda.outputs.image_tag }}" \
+            -var="environment=$env" \
+            -var-file="../environments/$env/$env.tfvars" \
             -out=tfplan
 
       - name: Terraform Apply
