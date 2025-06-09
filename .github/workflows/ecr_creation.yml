@@ -51,6 +51,7 @@ jobs:
           terraform_version: 1.12.0
 
       - name: Terraform Init - ECR Module
+        working-directory: ./Infra
         run: terraform init
 
       - name: Terraform Validate
@@ -67,7 +68,7 @@ jobs:
         run: |
           terraform plan \
             -var="environment=${{ github.event.inputs.environment || 'dev' }}" \
-            -var-file=".github/environments/${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars" \
+            -var-file="../environments/${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars" \
             -out=tfplan
 
       - name: Terraform Apply
