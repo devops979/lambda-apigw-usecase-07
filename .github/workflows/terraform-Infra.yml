@@ -41,6 +41,10 @@ permissions:
   contents: read
   pull-requests: write
 
+defaults:
+  run:
+    working-directory: ./Infra
+
 jobs:
   build_push_update_lambda:
     runs-on: ubuntu-latest
@@ -54,13 +58,13 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::211125325699:role/Demo_Access
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.0
+          terraform_version: ">=1.12.0"
 
       - name: Terraform Init
         run: terraform init
@@ -75,7 +79,7 @@ jobs:
 
       - name: Terraform Output ECR URL
         id: ecr
-        run: echo "ECR_URL=$(terraform output -raw ecr_url)" >> $GITHUB_OUTPUT
+        run: echo "ECR_URL=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
 
       - name: Docker Build & Push
         run: |
@@ -83,13 +87,31 @@ jobs:
           docker build -t ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }} .
           docker push ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }}
 
-      - name: Update Lambda Image
-        run: |
-          aws lambda update-function-code \
-            --function-name hello-world-lambda-${{ github.event.inputs.environment }} \
-            --image-uri ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }} \
-            --region ${{ env.AWS_REGION }}
 
+
+      - name: Update Lambda Image if Function Exists
+        shell: bash
+        run: |
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          IMAGE_TAG="${{ github.event.inputs.image_tag || 'latest' }}"
+          FUNCTION_NAME="demo-lambda-appgw-${ENVIRONMENT}"
+          IMAGE_URI="${{ steps.ecr.outputs.ECR_URL }}:${IMAGE_TAG}"
+      
+          echo "Checking if Lambda function '$FUNCTION_NAME' exists..."
+      
+          if aws lambda get-function --function-name "$FUNCTION_NAME" --region "${{ env.AWS_REGION }}" > /dev/null 2>&1; then
+            echo "Function exists. Updating image..."
+            aws lambda update-function-code \
+              --function-name "$FUNCTION_NAME" \
+              --image-uri "$IMAGE_URI" \
+              --region "${{ env.AWS_REGION }}"
+          else
+            echo "Function '$FUNCTION_NAME' does not exist. Skipping update."
+          fi
+        env:
+          AWS_REGION: ap-south-1
+      
+      
     outputs:
       image_tag: ${{ github.event.inputs.image_tag || 'latest' }}
       image_uri: ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }}
@@ -109,13 +131,12 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          role-session-name: GitHubActions-Deploy-${{ github.run_id }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.0
+          terraform_version: ">=1.12.0"
 
       - name: Terraform Init
         run: terraform init
@@ -139,32 +160,7 @@ jobs:
 
       - name: Terraform Apply
         if: github.event_name != 'pull_request'
-        run: terraform apply -auto-approve tfplan
-
-      - name: Force Lambda Function Update
-        if: github.event_name != 'pull_request'
-        run: |
-          FUNCTION_NAME="hello-world-lambda-${{ github.event.inputs.environment }}"
-          IMAGE_URI="${{ needs.build_push_update_lambda.outputs.image_uri }}"
-
-          aws lambda update-function-code \
-            --function-name $FUNCTION_NAME \
-            --image-uri $IMAGE_URI \
-            --region ${{ env.AWS_REGION }}
-
-          aws lambda wait function-updated \
-            --function-name $FUNCTION_NAME \
-            --region ${{ env.AWS_REGION }}
-
-          TIMESTAMP=$(date +%s)
-          aws lambda update-function-configuration \
-            --function-name $FUNCTION_NAME \
-            --environment "Variables={ENVIRONMENT=${{ github.event.inputs.environment }},FORCE_UPDATE=$TIMESTAMP}" \
-            --region ${{ env.AWS_REGION }}
-
-          aws lambda wait function-updated \
-            --function-name $FUNCTION_NAME \
-            --region ${{ env.AWS_REGION }}
+        run: terraform apply tfplan
 
       - name: Get Deployment Outputs
         id: outputs
@@ -174,8 +170,7 @@ jobs:
           echo "lambda_arn=$(terraform output -raw lambda_function_arn 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
 
     outputs:
-      api_url: ${{ steps.outputs.outputs.api_url }}
-      function_url: ${{ steps.outputs.outputs.function_url }}
-      lambda_arn: ${{ steps.outputs.outputs.lambda_arn }}
+      api_url: ${{ steps.outputs.outputs.base_url }}
+      lambda_arn: ${{ steps.outputs.outputs.function_arn }}
       image_tag: ${{ needs.build_push_update_lambda.outputs.image_tag }}
       image_uri: ${{ needs.build_push_update_lambda.outputs.image_uri }}
