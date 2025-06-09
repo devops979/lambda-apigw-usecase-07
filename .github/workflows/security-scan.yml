@@ -20,6 +20,7 @@ jobs:
       contents: read
       security-events: write
       actions: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -61,7 +62,7 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::211125325699:role/Demo_Access
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Check Terraform Formatting
