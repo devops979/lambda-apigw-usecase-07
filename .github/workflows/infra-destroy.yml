@@ -48,22 +48,27 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.0
-          terraform_wrapper: false
+          terraform_version: ">=1.12.0"
+
+      - name: Terraform Init - Infra
+        working-directory: ./Infra
+        run: terraform init
+
+      - name: Select or Create Terraform Workspace
+        working-directory: ./Infra
+        run: |
+          env="${{ github.event.inputs.environment || 'prod' }}"
+          if ! terraform workspace list | grep -w "$env"; then
+            terraform workspace new "$env"
+          fi
+          terraform workspace select "$env"
+  
  
       - name: Destroy Main Infrastructure
-        working-directory: terraform/environments/${{ github.event.inputs.environment }}
+        working-directory: ./Infra/
         run: |
           terraform init
           terraform destroy -auto-approve \
             -var="aws_region=${{ env.AWS_REGION }}"
  
-      - name: Destroy ECR Repository
-        if: github.event.inputs.destroy_ecr == 'true'
-        working-directory: terraform/modules/ecr
-        run: |
-          terraform init
-          terraform destroy -auto-approve \
-            -var="project_name=hello-world-lambda" \
-            -var="environment=${{ github.event.inputs.environment }}" \
-            -var="aws_region=${{ env.AWS_REGION }}"
+
