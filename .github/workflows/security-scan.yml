@@ -125,7 +125,7 @@ jobs:
           git checkout ${{ github.head_ref }}
            
           # Set remote URL with PAT for authenticated push
-          git remote set-url origin https://${{ github.actor }}:${GH_PAT}@github.com/${{ github.repository }}
+          git remote set-url origin https://${{ github.actor }}:${GITHUBTOKEN}@github.com/${{ github.repository }}
 
           terraform-docs markdown . > README.md.new
           mv README.md.new README.md
