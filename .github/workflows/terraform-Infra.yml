@@ -27,6 +27,7 @@ on:
       - main
     paths:
       - 'src/**'
+      - '.github/workflows/**'
   pull_request:
     branches:
       - main
@@ -81,12 +82,19 @@ jobs:
         id: ecr
         run: echo "ECR_URL=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
 
-      - name: Docker Build & Push
+      - name: Docker Build & Push (only if src/ or Dockerfile changed)
         working-directory: ./
         run: |
-          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ steps.ecr.outputs.ECR_URL }}
-          docker build -t ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }} .
-          docker push ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }}
+          if git diff --quiet HEAD^ HEAD -- src/ Dockerfile; then
+            echo "No changes in src/ or Dockerfile. Skipping Docker build and push."
+            exit 0
+          else
+            echo "Changes detected. Building and pushing Docker image..."
+            aws ecr get-login-password | docker login --username AWS --password-stdin ${{ steps.ecr.outputs.ECR_URL }}
+            docker build -t ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }} .
+            docker push ${{ steps.ecr.outputs.ECR_URL }}:${{ github.event.inputs.image_tag || 'latest' }}
+          fi
+
 
 
 
