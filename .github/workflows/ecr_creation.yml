@@ -82,9 +82,9 @@ jobs:
         working-directory: ./Infra
         id: ecr-uri
         run: |
-          ECR_URI=$(terraform output -raw repository_uri)
-          echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
-          echo "ECR Repository URI: $ECR_URI"
+          ECR_URL=$(terraform output -raw repository_url)
+          echo "ecr_url=$ECR_URL" >> $GITHUB_OUTPUT
+          echo "ECR Repository URI: $ECR_URL"
 
     outputs:
-      ecr_uri: ${{ steps.ecr-uri.outputs.ecr_uri }}
+      ecr_url: ${{ steps.ecr-uri.outputs.ecr_url }}
