@@ -6,7 +6,7 @@ on:
       environment:
         description: 'Environment to deploy to'
         required: true
-        default: 'dev'
+        default: 'prod'
         type: choice
         options:
           - dev
@@ -29,7 +29,7 @@ jobs:
   create-ecr-repository:
     name: Create ECR Repository
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
+    environment: ${{ github.event.inputs.environment || 'prod' }}
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main'))
 
     steps:
@@ -58,7 +58,7 @@ jobs:
       - name: Select or Create Terraform Workspace
         working-directory: ./Infra
         run: |
-          env="${{ github.event.inputs.environment || 'dev' }}"
+          env="${{ github.event.inputs.environment || 'prod' }}"
           if ! terraform workspace list | grep -w "$env"; then
             terraform workspace new "$env"
           fi
@@ -67,7 +67,7 @@ jobs:
       - name: Terraform Plan
         working-directory: ./Infra
         run: |
-          env="${{ github.event.inputs.environment || 'dev' }}"
+          env="${{ github.event.inputs.environment || 'prod' }}"
           terraform plan \
             -var="environment=$env" \
             -var-file="../environments/$env/$env.tfvars" \
