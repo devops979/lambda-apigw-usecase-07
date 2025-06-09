@@ -83,8 +83,8 @@ jobs:
       - name: Generate Terraform Docs and Commit
         if: github.event_name == 'pull_request'
         run: |
-          git config --local user.email "vnagaraj984@gmail.com"
-          git config --local user.name "nag9844"
+          git config --local user.email "devops979@gmail.com"
+          git config --local user.name "devops979"
 
           echo "--- Generating terraform-docs ---"
           # Direct terraform-docs to generate markdown to a temporary file
@@ -117,7 +117,7 @@ jobs:
         env:
           PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUBTOKEN }}
           script: |
             const output = `#### Terraform Format and Style \`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization \`${{ steps.init.outcome }}\`
