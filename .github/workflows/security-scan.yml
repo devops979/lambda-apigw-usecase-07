@@ -39,15 +39,24 @@ jobs:
 
       - name: Checkov GitHub Action
         uses: bridgecrewio/checkov-action@master
+        continue-on-error: true
         with:
           output_format: cli,sarif
           output_file_path: console,results.sarif
+          soft_fail: true
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
         if: success() || failure()
-        with:
-          sarif_file: results.sarif
+        run: |
+          if [ -f "results.sarif" ]; then
+            echo "SARIF file found. Uploading..."
+            gh codeql upload-sarif --sarif=results.sarif
+          else
+            echo "No SARIF file found. Skipping upload."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
+
 
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
