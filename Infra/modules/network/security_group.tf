@@ -1,5 +1,5 @@
 resource "aws_security_group" "lambda_sg" {
-  name        = "${var.name_prefix}-lambda-sg"
+  name        = "${var.name_prefix}-${terraform.workspace}-lambda-sg"
   description = "Security group for Lambda functions"
   vpc_id      = aws_vpc.demo-vpc.id
 
